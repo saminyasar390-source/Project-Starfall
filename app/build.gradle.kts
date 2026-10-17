@@ -8,6 +8,10 @@ android {
     compileSdk {
         version = release(37)
     }
+    buildFeatures {
+        compose = true
+        viewBinding = true
+    }
 
     defaultConfig {
         applicationId = "com.starfall.game"
