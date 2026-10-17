@@ -270,10 +270,12 @@ public class MenuView extends View {
         float cx = dst.left + W * RING_CX, cy = dst.top + H * RING_CY;
         float rx = W * RING_RX, ry = W * RING_RY;
         float ct = (float) Math.cos(RING_TILT), st = (float) Math.sin(RING_TILT);
-        for (int i = 0; i < RING_N; i++) {
+        int trails = GameSettings.quality == GameSettings.LOW ? 1 : 3;   // trail samples per particle
+        int ringCount = count(RING_N);
+        for (int i = 0; i < ringCount; i++) {
             float tw = 0.5f + 0.5f * (float) Math.sin(t * (1.4f + 0.9f * ringTw[i]) + ringPhase[i] * 3f);
             float wob = 1f + 0.04f * (float) Math.sin(t * 0.6f + ringPhase[i] * 2f);
-            for (int k = 0; k < 3; k++) {
+            for (int k = 0; k < trails; k++) {
                 float a = ringPhase[i] + ringOmega[i] * (t - k * 0.11f);
                 float lx = ringR[i] * wob * rx * (float) Math.cos(a);
                 float ly = ringR[i] * wob * ry * (float) Math.sin(a);
@@ -287,7 +289,8 @@ public class MenuView extends View {
         }
 
         // sparks climbing the beacon, through the star and off the top of the screen
-        for (int i = 0; i < SPARK_N; i++) {
+        int sparkCount = count(SPARK_N);
+        for (int i = 0; i < sparkCount; i++) {
             float u = fract(sparkPhase[i] + t * sparkSpeed[i]);            // 0 = castle, 1 = sky
             float y = botY + (dst.top - botY) * u;
             float x = bx + W * (sparkOff[i] + 0.004f * (float) Math.sin(t * 1.7f + sparkPhase[i] * 9f));
@@ -307,7 +310,8 @@ public class MenuView extends View {
         cv.restore();
 
         // twinkling stars across the sky (a few get a little flare)
-        for (int i = 0; i < STAR_N; i++) {
+        int starCount = count(STAR_N);
+        for (int i = 0; i < starCount; i++) {
             float tw = 0.5f + 0.5f * (float) Math.sin(t * starSpeed[i] + starPhase[i]);
             tw = tw * tw * tw;
             float x = dst.left + W * starX[i], y = dst.top + H * starY[i];
@@ -379,7 +383,8 @@ public class MenuView extends View {
         }
 
         // embers lifting off the blade
-        for (int i = 0; i < EMBER_N; i++) {
+        int emberCount = count(EMBER_N);
+        for (int i = 0; i < emberCount; i++) {
             float u = fract(emberPhase[i] + t * 0.16f);
             anim.bladePoint(emberS[i], t, bp);
             float x = ox + bp[0] * k + W * 0.006f * (float) Math.sin(t * 1.1f + emberPhase[i] * TWO_PI);
@@ -405,7 +410,8 @@ public class MenuView extends View {
 
     private void drawPetals(Canvas cv, float t) {
         float W = dst.width(), H = dst.height();
-        for (int i = 0; i < PETAL_N; i++) {
+        int petalCount = count(PETAL_N);
+        for (int i = 0; i < petalCount; i++) {
             float u = fract(petalPhase[i] + t / petalLife[i]);               // 0 = top, 1 = bottom
             float x = dst.left + W * (petalX0[i] + 0.22f * u + 0.018f * (float) Math.sin(t * 0.9f + petalPhase[i] * 20f));
             float y = dst.top + H * (-0.04f + 1.08f * u);
@@ -425,7 +431,8 @@ public class MenuView extends View {
 
     private void drawFireflies(Canvas cv, float t) {
         float W = dst.width(), H = dst.height();
-        for (int i = 0; i < FLY_N; i++) {
+        int flyCount = count(FLY_N);
+        for (int i = 0; i < flyCount; i++) {
             float sp = flySpeed[i];
             float x = dst.left + W * (flyX[i] + 0.012f * (float) Math.sin(t * sp + flyPhase[i]));
             float y = dst.top + H * (flyY[i] + 0.016f * (float) Math.sin(t * sp * 0.8f + flyPhase[i] * 1.7f));
@@ -472,6 +479,11 @@ public class MenuView extends View {
     }
 
     private static float fract(float x) { return x - (float) Math.floor(x); }
+
+    /** How many of {@code max} particles to draw at the quality chosen in Settings. */
+    private static int count(int max) {
+        return Math.max(1, Math.round(max * GameSettings.qualityFactor()));
+    }
 
     // ---- touch -----------------------------------------------------------------------------
 

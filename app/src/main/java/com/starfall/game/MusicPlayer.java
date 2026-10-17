@@ -15,24 +15,25 @@ import android.media.MediaPlayer;
  */
 public class MusicPlayer {
 
-    /** Controlled by the Music switch in SettingsActivity. */
-    public static boolean musicEnabled = true;
-
     private final Context context;
     private final int resId;
-    private final float volume;
+    private final float baseVolume;
     private MediaPlayer player;
 
-    /** @param resId the track in res/raw, e.g. R.raw.menu_music   @param volume 0.0 (silent) to 1.0 (full) */
-    public MusicPlayer(Context context, int resId, float volume) {
+    /**
+     * @param resId      the track in res/raw, e.g. R.raw.menu_music
+     * @param baseVolume loudness at 100% on the Settings slider, 0.0 (silent) to 1.0 (full)
+     */
+    public MusicPlayer(Context context, int resId, float baseVolume) {
         this.context = context.getApplicationContext();
         this.resId = resId;
-        this.volume = volume;
+        this.baseVolume = baseVolume;
+        GameSettings.load(this.context);
     }
 
-    /** Starts the track, or resumes it from where it was paused. Does nothing if music is switched off. */
+    /** Starts the track, or resumes it from where it was paused. Does nothing if the Settings volume is 0. */
     public void start() {
-        if (!musicEnabled) return;
+        if (GameSettings.musicVolume <= 0) { pause(); return; }
         if (player == null) {
             AudioAttributes attrs = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_GAME)
@@ -41,8 +42,9 @@ public class MusicPlayer {
             player = MediaPlayer.create(context, resId, attrs, AudioManager.AUDIO_SESSION_ID_GENERATE);
             if (player == null) return;          // the file could not be opened or decoded
             player.setLooping(true);             // restarts by itself when the track ends
-            player.setVolume(volume, volume);
         }
+        float v = baseVolume * GameSettings.music();   // re-read every time, so Settings changes apply
+        player.setVolume(v, v);
         if (!player.isPlaying()) player.start();
     }
 

@@ -18,7 +18,7 @@ public class MainMenuActivity extends Activity {
         Log.d(TAG, "MainMenuActivity onCreate");
         UiUtil.goFullscreen(this);
 
-        music = new MusicPlayer(this, R.raw.menu_music, 0.6f);   // menu theme, loops while this screen is open
+        music = new MusicPlayer(this, R.raw.menu_music, 0.85f);   // menu theme, loops while this screen is open
 
         setContentView(new MenuView(this, index -> {
             switch (index) {

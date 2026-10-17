@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Darkens the right side of the dimmed menu artwork, where the picture has its own painted menu buttons. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <gradient
+        android:angle="0"
+        android:centerX="0.68"
+        android:startColor="#00050818"
+        android:centerColor="#B3050818"
+        android:endColor="#F7050818" />
+</shape>

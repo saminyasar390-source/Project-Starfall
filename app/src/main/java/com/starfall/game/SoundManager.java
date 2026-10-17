@@ -10,15 +10,13 @@ import android.media.SoundPool;
  */
 public class SoundManager {
 
-    /** Controlled by the Sound effects switch in SettingsActivity. */
-    public static boolean sfxEnabled = true;
-
     private final SoundPool pool;
     private final int shoot, hurt, pickup, levelUp, gameOver, click, hover, portal;
     private boolean portalLoaded;
     private boolean pendingMenuIntro;
 
     public SoundManager(Context c) {
+        GameSettings.load(c);   // sound effects volume comes from the Settings screen
         AudioAttributes attrs = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -37,13 +35,18 @@ public class SoundManager {
         pool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
             if (sampleId == portal && status == 0) {
                 portalLoaded = true;
-                if (pendingMenuIntro && sfxEnabled) { soundPool.play(portal, 0.22f, 0.22f, 1, 0, 1f); pendingMenuIntro = false; }
+                if (pendingMenuIntro) {
+                    float v = 0.22f * GameSettings.sfx();
+                    if (v > 0f) soundPool.play(portal, v, v, 1, 0, 1f);
+                    pendingMenuIntro = false;
+                }
             }
         });
     }
 
     private void play(int id, float volume) {
-        if (sfxEnabled) pool.play(id, volume, volume, 1, 0, 1f);
+        float v = volume * GameSettings.sfx();      // scaled by the Settings volume (0 = silent)
+        if (v > 0f) pool.play(id, v, v, 1, 0, 1f);
     }
 
     public void shoot()    { play(shoot, 0.35f); }

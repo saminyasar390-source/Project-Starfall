@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The OK button: same trim, but a glowing violet-to-indigo fill and a light-gold rim so it stands out. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#FF5B4FC4" android:endColor="#FF3A2F96" />
+            <stroke android:width="2dp" android:color="@color/sf_cyan" />
+            <corners android:radius="9dp" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:angle="270" android:startColor="#FF6E5FE0" android:endColor="#FF3A2F96" />
+            <stroke android:width="2dp" android:color="@color/sf_gold_light" />
+            <corners android:radius="9dp" />
+        </shape>
+    </item>
+</selector>

@@ -7,4 +7,20 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <!-- Settings screen palette (matches the menu artwork: night sky, gold trim, cyan glow) -->
+    <color name="sf_dim">#C4050818</color>
+    <color name="sf_bronze">#FF7A5A2B</color>
+    <color name="sf_gold">#FFE9C46A</color>
+    <color name="sf_gold_light">#FFFFE9A8</color>
+    <color name="sf_panel_top">#FF1C2063</color>
+    <color name="sf_panel_bottom">#FF0A0D33</color>
+    <color name="sf_cyan">#FF7FE3FF</color>
+    <color name="sf_cyan_line">#553E8FB0</color>
+    <color name="sf_violet">#FFB58CFF</color>
+    <color name="sf_indigo">#FF2B2562</color>
+    <color name="sf_indigo_pressed">#FF40398A</color>
+    <color name="sf_track">#FF141A55</color>
+    <color name="sf_track_edge">#FF4A4F9A</color>
+    <color name="sf_cream">#FFFFF3D6</color>
+    <color name="sf_text_dim">#FF9FB4FF</color>
 </resources>
