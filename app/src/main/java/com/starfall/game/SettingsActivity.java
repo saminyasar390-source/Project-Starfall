@@ -32,9 +32,11 @@ public class SettingsActivity extends Activity {
 
         // Event handling: listener for a switch being toggled
         binding.switchMusic.setOnCheckedChangeListener((button, isChecked) ->
-                binding.tvStatus.setText("Music: " + (isChecked ? "ON" : "OFF")));
+                binding.tvStatus.setText(getString(R.string.music_status,
+                        getString(isChecked ? R.string.status_on : R.string.status_off))));
         binding.switchSfx.setOnCheckedChangeListener((button, isChecked) ->
-                binding.tvStatus.setText("Sound effects: " + (isChecked ? "ON" : "OFF")));
+                binding.tvStatus.setText(getString(R.string.sfx_status,
+                        getString(isChecked ? R.string.status_on : R.string.status_off))));
 
         // Click listener + IMPLICIT Intent: we only say WHAT we want (view a web page);
         // Android picks the app (browser) that can do it.

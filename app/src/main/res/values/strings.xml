@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Starfall</string>
+    <string name="status_on">ON</string>
+    <string name="status_off">OFF</string>
+    <string name="music_status">Music: %1$s</string>
+    <string name="sfx_status">Sound effects: %1$s</string>
 </resources>
