@@ -32,4 +32,7 @@ public class MainMenuActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) UiUtil.goFullscreen(this);
     }
+    @Override protected void onStart()   { super.onStart();   Log.d("Lifecycle", getClass().getSimpleName() + " onStart"); }
+    @Override protected void onStop()    { super.onStop();    Log.d("Lifecycle", getClass().getSimpleName() + " onStop"); }
+    @Override protected void onDestroy() { super.onDestroy(); Log.d("Lifecycle", getClass().getSimpleName() + " onDestroy"); }
 }

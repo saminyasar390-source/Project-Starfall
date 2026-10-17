@@ -2,6 +2,7 @@ package com.starfall.game;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 
 public class GameActivity extends Activity {
 
@@ -33,4 +34,7 @@ public class GameActivity extends Activity {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) UiUtil.goFullscreen(this);
     }
+    @Override protected void onStart()   { super.onStart();   Log.d("Lifecycle", getClass().getSimpleName() + " onStart"); }
+    @Override protected void onStop()    { super.onStop();    Log.d("Lifecycle", getClass().getSimpleName() + " onStop"); }
+    @Override protected void onDestroy() { super.onDestroy(); Log.d("Lifecycle", getClass().getSimpleName() + " onDestroy"); }
 }
