@@ -30,13 +30,16 @@ public class SettingsActivity extends Activity {
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Start the switch in the current sound setting
+        // Start the switches in the current sound settings
         binding.switchSfx.setChecked(SoundManager.sfxEnabled);
+        binding.switchMusic.setChecked(MusicPlayer.musicEnabled);
 
         // Event handling: listener for a switch being toggled
-        binding.switchMusic.setOnCheckedChangeListener((button, isChecked) ->
-                binding.tvStatus.setText(getString(R.string.music_status,
-                        getString(isChecked ? R.string.status_on : R.string.status_off))));
+        binding.switchMusic.setOnCheckedChangeListener((button, isChecked) -> {
+            MusicPlayer.musicEnabled = isChecked;   // the menu music checks this when the menu is shown again
+            binding.tvStatus.setText(getString(R.string.music_status,
+                    getString(isChecked ? R.string.status_on : R.string.status_off)));
+        });
         binding.switchSfx.setOnCheckedChangeListener((button, isChecked) -> {
             SoundManager.sfxEnabled = isChecked;   // turns all sound effects on/off
             binding.tvStatus.setText(getString(R.string.sfx_status,

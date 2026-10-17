@@ -10,11 +10,15 @@ public class MainMenuActivity extends Activity {
 
     private static final String TAG = "Lifecycle";
 
+    private MusicPlayer music;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "MainMenuActivity onCreate");
         UiUtil.goFullscreen(this);
+
+        music = new MusicPlayer(this, R.raw.menu_music, 0.6f);   // menu theme, loops while this screen is open
 
         setContentView(new MenuView(this, index -> {
             switch (index) {
@@ -36,10 +40,10 @@ public class MainMenuActivity extends Activity {
     }
 
     @Override protected void onStart()   { super.onStart();   Log.d(TAG, "MainMenuActivity onStart"); }
-    @Override protected void onResume()  { super.onResume();  Log.d(TAG, "MainMenuActivity onResume"); }
-    @Override protected void onPause()   { super.onPause();   Log.d(TAG, "MainMenuActivity onPause"); }
+    @Override protected void onResume()  { super.onResume();  Log.d(TAG, "MainMenuActivity onResume"); music.start(); }
+    @Override protected void onPause()   { super.onPause();   Log.d(TAG, "MainMenuActivity onPause"); music.pause(); }
     @Override protected void onStop()    { super.onStop();    Log.d(TAG, "MainMenuActivity onStop"); }
-    @Override protected void onDestroy() { super.onDestroy(); Log.d(TAG, "MainMenuActivity onDestroy"); }
+    @Override protected void onDestroy() { super.onDestroy(); Log.d(TAG, "MainMenuActivity onDestroy"); music.release(); }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
