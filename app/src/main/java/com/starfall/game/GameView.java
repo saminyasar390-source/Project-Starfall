@@ -45,6 +45,10 @@ public class GameView extends SurfaceView implements Runnable {
     private final Random rng = new Random();
     private final SoundManager sounds;
 
+    // ---- cached HUD text (rebuilt only when the value changes, so no garbage every frame) ----
+    private String timeText = "00:00", levelText = "Lv 1", killsText = "Kills 0", gameOverText;
+    private int lastSec = -1, lastLevel = -1, lastKills = -1;
+
     // ---- state ----
     private int state = PLAYING;
     private float time = 0f, spawnTimer = 1f, fireTimer = 0f, levelUpFlash = 0f;
@@ -268,6 +272,10 @@ public class GameView extends SurfaceView implements Runnable {
         return Math.max(lo, Math.min(hi, v));
     }
 
+    private static boolean onScreen(float sx, float sy, int w, int h, float margin) {
+        return sx > -margin && sx < w + margin && sy > -margin && sy < h + margin;
+    }
+
     // ------------------------------------------------------------ draw
     private void drawGame(Canvas c) {
         int w = getWidth(), h = getHeight();
@@ -283,10 +291,18 @@ public class GameView extends SurfaceView implements Runnable {
         c.drawColor(Color.BLACK);
         c.drawBitmap(map, src, dstF, mapPaint);
 
-        for (Gem g : gems) g.draw(c, camX, camY, shapePaint);
-        for (Enemy en : enemies) en.draw(c, camX, camY, spritePaint);
+        // only draw what is on screen (plus a margin for big sprites)
+        final float margin = 200f;
+        for (Gem g : gems) {
+            if (onScreen(g.x - camX, g.y - camY, w, h, margin)) g.draw(c, camX, camY, shapePaint);
+        }
+        for (Enemy en : enemies) {
+            if (onScreen(en.x - camX, en.y - camY, w, h, margin)) en.draw(c, camX, camY, spritePaint);
+        }
         player.draw(c, camX, camY, spritePaint);
-        for (Projectile s : shots) s.draw(c, camX, camY, shapePaint);
+        for (Projectile s : shots) {
+            if (onScreen(s.x - camX, s.y - camY, w, h, margin)) s.draw(c, camX, camY, shapePaint);
+        }
 
         joystick.draw(c, shapePaint);
         drawHud(c, w, h);
@@ -312,13 +328,16 @@ public class GameView extends SurfaceView implements Runnable {
         c.drawRect(left, top, left + barW, top + barH, shapePaint);
         shapePaint.setColor(0xFFE53935);
         c.drawRect(left, top, left + barW * Math.max(0, player.hp) / (float) player.maxHp, top + barH, shapePaint);
-        c.drawText("Lv " + player.level, left + barW + m, top + barH, textPaint);
+        if (player.level != lastLevel) { lastLevel = player.level; levelText = "Lv " + lastLevel; }
+        c.drawText(levelText, left + barW + m, top + barH, textPaint);
 
         // timer + kills (top right)
         textPaint.setTextAlign(Paint.Align.RIGHT);
         int sec = (int) time;
-        c.drawText(String.format("%02d:%02d", sec / 60, sec % 60), w - left, top + barH, textPaint);
-        c.drawText("Kills " + kills, w - left, top + barH + h * 0.06f, textPaint);
+        if (sec != lastSec) { lastSec = sec; timeText = String.format("%02d:%02d", sec / 60, sec % 60); }
+        if (kills != lastKills) { lastKills = kills; killsText = "Kills " + lastKills; }
+        c.drawText(timeText, w - left, top + barH, textPaint);
+        c.drawText(killsText, w - left, top + barH + h * 0.06f, textPaint);
 
         if (levelUpFlash > 0) {
             textPaint.setTextAlign(Paint.Align.CENTER);
@@ -333,9 +352,11 @@ public class GameView extends SurfaceView implements Runnable {
         textPaint.setTextSize(h * 0.12f);
         c.drawText("GAME OVER", w / 2f, h * 0.42f, textPaint);
         textPaint.setTextSize(h * 0.05f);
-        int sec = (int) time;
-        c.drawText(String.format("Survived %02d:%02d   |   Kills %d", sec / 60, sec % 60, kills),
-                w / 2f, h * 0.55f, textPaint);
+        if (gameOverText == null) {   // built once, not every frame
+            int sec = (int) time;
+            gameOverText = String.format("Survived %02d:%02d   |   Kills %d", sec / 60, sec % 60, kills);
+        }
+        c.drawText(gameOverText, w / 2f, h * 0.55f, textPaint);
         c.drawText("Tap to return to the menu", w / 2f, h * 0.68f, textPaint);
     }
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release builds remove unused resources. The animation frames are loaded by name
+     (Assets.frames), so tell the shrinker to keep them. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/rin_walk_*,@drawable/slime_walk_*,@drawable/wolf_walk_*" />

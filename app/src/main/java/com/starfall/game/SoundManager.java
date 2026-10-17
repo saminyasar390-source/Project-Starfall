@@ -14,7 +14,9 @@ public class SoundManager {
     public static boolean sfxEnabled = true;
 
     private final SoundPool pool;
-    private final int shoot, hurt, pickup, levelUp, gameOver, click;
+    private final int shoot, hurt, pickup, levelUp, gameOver, click, hover, portal;
+    private boolean portalLoaded;
+    private boolean pendingMenuIntro;
 
     public SoundManager(Context c) {
         AudioAttributes attrs = new AudioAttributes.Builder()
@@ -30,6 +32,14 @@ public class SoundManager {
         levelUp  = pool.load(c, R.raw.sfx_level_up, 1);
         gameOver = pool.load(c, R.raw.sfx_game_over, 1);
         click    = pool.load(c, R.raw.sfx_click, 1);
+        hover    = pool.load(c, R.raw.sfx_hover, 1);
+        portal   = pool.load(c, R.raw.sfx_portal, 1);
+        pool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
+            if (sampleId == portal && status == 0) {
+                portalLoaded = true;
+                if (pendingMenuIntro && sfxEnabled) { soundPool.play(portal, 0.22f, 0.22f, 1, 0, 1f); pendingMenuIntro = false; }
+            }
+        });
     }
 
     private void play(int id, float volume) {
@@ -42,6 +52,9 @@ public class SoundManager {
     public void levelUp()  { play(levelUp, 0.8f); }
     public void gameOver() { play(gameOver, 0.9f); }
     public void click()    { play(click, 0.8f); }
+    public void hover()    { play(hover, 0.35f); }
+    /** A brief magical menu-arrival sound; this is an effect, not looping music. */
+    public void menuIntro() { if (portalLoaded) play(portal, 0.22f); else pendingMenuIntro = true; }
 
     public void release() {
         pool.release();

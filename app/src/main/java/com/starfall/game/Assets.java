@@ -20,8 +20,10 @@ public class Assets {
         for (int i = 0; i < count; i++) {
             int id = c.getResources().getIdentifier(prefix + i, "drawable", c.getPackageName());
             Bitmap b = load(c, id);
-            out[i] = Bitmap.createScaledBitmap(
+            Bitmap scaled = Bitmap.createScaledBitmap(
                     b, (int) (b.getWidth() * scale), (int) (b.getHeight() * scale), false);
+            if (scaled != b) b.recycle();     // free the small original right away
+            out[i] = scaled;
         }
         return out;
     }
