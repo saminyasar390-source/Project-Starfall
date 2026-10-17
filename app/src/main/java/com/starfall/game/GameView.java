@@ -104,7 +104,7 @@ public class GameView extends SurfaceView implements Runnable {
 
             Canvas c = Build.VERSION.SDK_INT >= 26 ? holder.lockHardwareCanvas() : holder.lockCanvas();
             if (c != null) {
-                try { draw(c); } finally { holder.unlockCanvasAndPost(c); }
+                try { drawGame(c); } finally { holder.unlockCanvasAndPost(c); }
             }
 
             long spentMs = (System.nanoTime() - now) / 1_000_000;
@@ -254,7 +254,7 @@ public class GameView extends SurfaceView implements Runnable {
     }
 
     // ------------------------------------------------------------ draw
-    private void draw(Canvas c) {
+    private void drawGame(Canvas c) {
         int w = getWidth(), h = getHeight();
         float camX = clamp(player.x - w / 2f, 0, Math.max(0, worldW - w));
         float camY = clamp(player.y - h / 2f, 0, Math.max(0, worldH - h));
