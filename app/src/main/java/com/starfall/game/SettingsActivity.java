@@ -30,13 +30,18 @@ public class SettingsActivity extends Activity {
         binding = ActivitySettingsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Start the switch in the current sound setting
+        binding.switchSfx.setChecked(SoundManager.sfxEnabled);
+
         // Event handling: listener for a switch being toggled
         binding.switchMusic.setOnCheckedChangeListener((button, isChecked) ->
                 binding.tvStatus.setText(getString(R.string.music_status,
                         getString(isChecked ? R.string.status_on : R.string.status_off))));
-        binding.switchSfx.setOnCheckedChangeListener((button, isChecked) ->
-                binding.tvStatus.setText(getString(R.string.sfx_status,
-                        getString(isChecked ? R.string.status_on : R.string.status_off))));
+        binding.switchSfx.setOnCheckedChangeListener((button, isChecked) -> {
+            SoundManager.sfxEnabled = isChecked;   // turns all sound effects on/off
+            binding.tvStatus.setText(getString(R.string.sfx_status,
+                    getString(isChecked ? R.string.status_on : R.string.status_off)));
+        });
 
         // Click listener + IMPLICIT Intent: we only say WHAT we want (view a web page);
         // Android picks the app (browser) that can do it.

@@ -31,12 +31,14 @@ public class MenuView extends View {
 
     private final Bitmap menu;
     private final Listener listener;
+    private final SoundManager sounds;
     private final Paint paint = new Paint(Paint.FILTER_BITMAP_FLAG);
     private final RectF dst = new RectF();
 
     public MenuView(Context c, Listener l) {
         super(c);
         listener = l;
+        sounds = new SoundManager(c);
         menu = Assets.load(c, R.drawable.menu_main);
     }
 
@@ -50,6 +52,12 @@ public class MenuView extends View {
     }
 
     @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        sounds.release();
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent e) {
         if (e.getAction() == MotionEvent.ACTION_UP && dst.width() > 0) {
             float fx = (e.getX() - dst.left) / dst.width();
@@ -57,6 +65,7 @@ public class MenuView extends View {
             for (int i = 0; i < BUTTONS.length; i++) {
                 float[] b = BUTTONS[i];
                 if (fx >= b[0] && fx <= b[2] && fy >= b[1] && fy <= b[3]) {
+                    sounds.click();
                     listener.onButton(i);
                     break;
                 }

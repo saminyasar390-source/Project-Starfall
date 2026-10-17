@@ -43,6 +43,7 @@ public class GameView extends SurfaceView implements Runnable {
     private final List<Projectile> shots = new ArrayList<>();
     private final List<Gem> gems = new ArrayList<>();
     private final Random rng = new Random();
+    private final SoundManager sounds;
 
     // ---- state ----
     private int state = PLAYING;
@@ -61,6 +62,7 @@ public class GameView extends SurfaceView implements Runnable {
     public GameView(Context context) {
         super(context);
         holder = getHolder();
+        sounds = new SoundManager(context);
 
         map = Assets.load(context, R.drawable.map_forest);   // try map_cyberpunk / map_kingdom too
         worldW = map.getWidth() * MAP_SCALE;
@@ -88,6 +90,12 @@ public class GameView extends SurfaceView implements Runnable {
     public void pause() {
         running = false;
         try { if (thread != null) thread.join(); } catch (InterruptedException ignored) { }
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        sounds.release();   // free the sound memory when the screen closes
     }
 
     @Override
@@ -172,6 +180,7 @@ public class GameView extends SurfaceView implements Runnable {
                 float dx = target.x - player.x, dy = target.y - player.y;
                 float d = (float) Math.sqrt(dx * dx + dy * dy);
                 shots.add(new Projectile(player.x, player.y, dx / d, dy / d, 900f, 12));
+                sounds.shoot();
                 fireTimer = 0.6f;
             }
         }
@@ -181,7 +190,11 @@ public class GameView extends SurfaceView implements Runnable {
             en.update(dt, player.x, player.y);
             float dx = player.x - en.x, dy = player.y - en.y;
             float r = player.radius + en.radius;
-            if (dx * dx + dy * dy < r * r) player.damage(en.damage);
+            if (dx * dx + dy * dy < r * r) {
+                int before = player.hp;
+                player.damage(en.damage);
+                if (player.hp < before) sounds.hurt();   // only when damage really landed
+            }
         }
 
         // projectiles hit enemies
@@ -216,12 +229,14 @@ public class GameView extends SurfaceView implements Runnable {
             if (g.distanceTo(player.x, player.y) < 50f) {
                 if (player.addXp(g.value)) {
                     levelUpFlash = 1.2f;   // TODO: open the upgrade-choice screen here
+                    sounds.levelUp();
                 }
+                sounds.pickup();
                 gems.remove(i);
             }
         }
 
-        if (player.hp <= 0) state = GAME_OVER;
+        if (player.hp <= 0) { state = GAME_OVER; sounds.gameOver(); }
     }
 
     private Enemy nearestEnemy(float maxDist) {
