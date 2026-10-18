@@ -6,7 +6,7 @@ import android.graphics.Paint;
 
 public class Player {
     public float x, y;
-    public final float speed = 420f;      // pixels per second
+    public float speed = 420f;      // pixels per second
     public final float radius = 40f;      // hit-box radius
     public int hp = 100, maxHp = 100;
     public int level = 1, xp = 0, xpNeeded = 8;
