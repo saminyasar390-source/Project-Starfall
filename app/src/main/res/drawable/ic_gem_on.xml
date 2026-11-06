@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Selected quality: a lit gold star on a cyan halo. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#337FE3FF"
+        android:pathData="M12,12 m-11,0 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0" />
+    <path
+        android:fillColor="#E9C46A"
+        android:strokeColor="#7A5A2B"
+        android:strokeWidth="0.8"
+        android:pathData="M12,3 L14,10 L21,12 L14,14 L12,21 L10,14 L3,12 L10,10 Z" />
+    <path
+        android:fillColor="#FFF3D6"
+        android:pathData="M12,8.5 L12.9,11.1 L15.5,12 L12.9,12.9 L12,15.5 L11.1,12.9 L8.5,12 L11.1,11.1 Z" />
+</vector>

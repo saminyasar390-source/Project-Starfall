@@ -6,7 +6,7 @@ import android.graphics.Paint;
 
 public class Player {
     public float x, y;
-    public final float speed = 420f;      // pixels per second
+    public float speed = 420f;      // pixels per second
     public final float radius = 40f;      // hit-box radius
     public int hp = 100, maxHp = 100;
     public int level = 1, xp = 0, xpNeeded = 8;
@@ -49,16 +49,20 @@ public class Player {
         invuln = 0.6f;
     }
 
-    /** @return true if this XP caused a level up */
-    public boolean addXp(int amount) {
+    /**
+     * Adds XP. Every level up fully restores the HP bar.
+     * @return how many levels were gained (0 if none)
+     */
+    public int addXp(int amount) {
         xp += amount;
-        if (xp >= xpNeeded) {
+        int gained = 0;
+        while (xp >= xpNeeded) {
             xp -= xpNeeded;
             level++;
+            gained++;
             xpNeeded = 8 + level * 3;
-            hp = Math.min(maxHp, hp + 10);
-            return true;
         }
-        return false;
+        if (gained > 0) hp = maxHp;
+        return gained;
     }
 }
