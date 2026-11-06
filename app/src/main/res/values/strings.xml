@@ -4,4 +4,21 @@
     <string name="status_off">OFF</string>
     <string name="music_status">Music: %1$s</string>
     <string name="sfx_status">Sound effects: %1$s</string>
+    <!-- Settings screen -->
+    <string name="settings_title">SETTINGS</string>
+    <string name="settings_music">Music</string>
+    <string name="settings_sfx">Sound effects</string>
+    <string name="settings_graphics">Graphics</string>
+    <string name="volume_label">%1$s  %2$d%%</string>
+    <string name="quality_low">low</string>
+    <string name="quality_medium">medium</string>
+    <string name="quality_high">high</string>
+    <string name="btn_ok">OK</string>
+    <string name="btn_back">BACK</string>
+    <string name="btn_github">GitHub</string>
+    <string name="btn_share">Share</string>
+    <string name="cd_music_down">Lower music volume</string>
+    <string name="cd_music_up">Raise music volume</string>
+    <string name="cd_sfx_down">Lower sound effects volume</string>
+    <string name="cd_sfx_up">Raise sound effects volume</string>
 </resources>
