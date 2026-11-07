@@ -1,0 +1,7 @@
+Delete these 4 old PNG files from app/src/main/res/drawable-nodpi BEFORE building
+(the new .webp files have the same names and would cause "Duplicate resources"):
+
+  menu_main.png
+  map_forest.png
+  map_cyberpunk.png
+  map_kingdom.png

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text used across the settings screen: cream, bold, monospaced (close to the menu's pixel buttons). -->
+    <style name="SfLabel">
+        <item name="android:textColor">@color/sf_cream</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:letterSpacing">0.06</item>
+    </style>
+
+    <!-- Gold-trimmed indigo button (same look as the menu buttons). Used on TextViews. -->
+    <style name="SfButton" parent="SfLabel">
+        <item name="android:background">@drawable/bg_btn_game</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Square - / + buttons next to the sliders. -->
+    <style name="SfRoundButton" parent="SfButton">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+
+    <!-- Low / medium / high choice: a gem above the word, lit when selected. -->
+    <style name="SfRadio" parent="SfLabel">
+        <item name="android:button">@null</item>
+        <item name="android:drawableTop">@drawable/radio_gem</item>
+        <item name="android:drawablePadding">2dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/sf_quality_text</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+    </style>
+</resources>
