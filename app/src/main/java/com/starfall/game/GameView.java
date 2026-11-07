@@ -2,6 +2,7 @@ package com.starfall.game;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.os.Build;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -33,6 +35,8 @@ public class GameView extends SurfaceView implements Runnable {
     private static final int MAX_BULLETS = 9;
     private static final float FIRE_INTERVAL = 0.6f;        // seconds between volleys
     private static final int BULLET_DAMAGE = 12;
+    private static final int GOLD_PER_WAVE = 120;           // gold reward = waves survived ...
+    private static final int GOLD_PER_BOSS = 400;           // ... plus bosses defeated
     private static final float BULLET_SPREAD = (float) Math.toRadians(15);   // fan angle for extra bullets
 
     private static final String[] BOSS_FRAMES = {"skel_walk_", "tree_walk_", "mecha_walk_", "malenia_walk_"};
@@ -41,7 +45,7 @@ public class GameView extends SurfaceView implements Runnable {
 
     private static final float MAP_SCALE = 3f;      // 1536x1024 map -> 4608x3072 world
     private static final float SPRITE_SCALE = 3f;   // 48px sprite -> 144px on screen
-    private static final int PLAYING = 0, GAME_OVER = 1;
+    private static final int PLAYING = 0, GAME_OVER = 1, PAUSED = 2;
 
     private Thread thread;
     private volatile boolean running;
@@ -70,11 +74,15 @@ public class GameView extends SurfaceView implements Runnable {
     private int lastWave = -1, lastTimerSec = -1, lastLevel = -1;
 
     // ---- state ----
-    private int state = PLAYING;
+    private volatile int state = PLAYING;    // touched by both the UI thread and the game thread
+    private String pauseReason = "";
     private float time = 0f;                 // total time survived
     private int wave = 1;
     private float waveTime = 0f;             // seconds into the current wave
     private float spawnTimer = 1f, fireTimer = 0f;
+    private int bossKills = 0, goldEarned = 0;   // for the gold reward at game over
+    private String goldText;
+    private float damageMult = 1f;               // hero bonus from duplicate pulls
     private int lastTier = 0;                // weapon upgrade level we already announced
     private float levelUpFlash = 0f, weaponFlash = 0f;
     private String bannerText = "";
@@ -90,6 +98,10 @@ public class GameView extends SurfaceView implements Runnable {
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Rect src = new Rect();
     private final RectF dstF = new RectF();
+
+    // ---- pause button (top-left) and the buttons of the pause menu ----
+    private final RectF pauseBtn = new RectF(), resumeBtn = new RectF(),
+            settingsBtn = new RectF(), exitBtn = new RectF();
 
     public GameView(Context context) {
         super(context);
@@ -108,6 +120,14 @@ public class GameView extends SurfaceView implements Runnable {
         wolfR = Assets.flipAll(wolfL);
 
         player = new Player(rinR, rinL, worldW / 2f, worldH / 2f);
+
+        // Duplicate pulls from the Convene banner: +1% HP, ATK and SPD per copy (max +20%)
+        PlayerData.load(context);
+        float bonus = 1f + PlayerData.dupes(PlayerData.selectedHero()) / 100f;
+        player.maxHp = Math.round(player.maxHp * bonus);
+        player.hp = player.maxHp;
+        player.speed *= bonus;
+        damageMult = bonus;
         textPaint.setColor(Color.WHITE);
         textPaint.setFakeBoldText(true);
         textPaint.setShadowLayer(4f, 2f, 2f, Color.BLACK);
@@ -125,6 +145,49 @@ public class GameView extends SurfaceView implements Runnable {
     public void pause() {
         running = false;
         try { if (thread != null) thread.join(); } catch (InterruptedException ignored) { }
+    }
+
+    // ------------------------------------------------------------ pause (ESC)
+    /**
+     * Pauses the game. Used by the pause button, the Back key (ESC) and the Activity lifecycle
+     * (onPause / losing window focus), so the game is already paused when the player comes back.
+     */
+    public void pauseGame(boolean byLifecycle) {
+        if (state != PLAYING) return;
+        pauseReason = byLifecycle
+                ? "The app left the foreground, so the game paused itself (onPause)"
+                : "Game paused";
+        joystick.stop();
+        joyPointerId = -1;
+        state = PAUSED;
+        Log.d("Lifecycle", "GameView paused " + (byLifecycle ? "automatically" : "by the player"));
+    }
+
+    public void resumeGame() {
+        if (state != PAUSED) return;
+        state = PLAYING;
+        Log.d("Lifecycle", "GameView resumed by the player");
+    }
+
+    /**
+     * Back key = ESC: pauses, or resumes if already paused.
+     * @return false when the game is over, so the Activity should close itself.
+     */
+    public boolean handleBack() {
+        if (state == PLAYING) { pauseGame(false); return true; }
+        if (state == PAUSED) { resumeGame(); return true; }
+        return false;
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        float s = h * 0.09f;
+        pauseBtn.set(w * 0.03f, h * 0.04f, w * 0.03f + s, h * 0.04f + s);
+        float bw = w * 0.28f, bh = h * 0.12f;
+        resumeBtn.set(w / 2f - bw / 2f, h * 0.42f, w / 2f + bw / 2f, h * 0.42f + bh);
+        settingsBtn.set(w / 2f - bw / 2f, h * 0.57f, w / 2f + bw / 2f, h * 0.57f + bh);
+        exitBtn.set(w / 2f - bw / 2f, h * 0.72f, w / 2f + bw / 2f, h * 0.72f + bh);
     }
 
     @Override
@@ -151,7 +214,8 @@ public class GameView extends SurfaceView implements Runnable {
             }
 
             long spentMs = (System.nanoTime() - now) / 1_000_000;
-            if (spentMs < 16) sleep(16 - spentMs);   // cap at ~60 FPS
+            long frameMs = (state == PAUSED) ? 33 : 16;   // ~30 FPS while paused saves battery
+            if (spentMs < frameMs) sleep(frameMs - spentMs);
         }
     }
 
@@ -165,6 +229,31 @@ public class GameView extends SurfaceView implements Runnable {
         if (state == GAME_OVER) {
             if (e.getActionMasked() == MotionEvent.ACTION_UP) ((Activity) getContext()).finish();
             return true;
+        }
+        if (state == PAUSED) {                       // taps on the pause menu
+            if (e.getActionMasked() == MotionEvent.ACTION_UP) {
+                if (resumeBtn.contains(e.getX(), e.getY())) {
+                    sounds.click();
+                    resumeGame();
+                } else if (settingsBtn.contains(e.getX(), e.getY())) {
+                    sounds.click();
+                    // Same Settings screen as the main menu. The game stays paused underneath it.
+                    getContext().startActivity(new Intent(getContext(), SettingsActivity.class));
+                } else if (exitBtn.contains(e.getX(), e.getY())) {
+                    sounds.click();
+                    ((Activity) getContext()).finish();      // leave the run, back to the main menu
+                }
+            }
+            return true;
+        }
+        int action = e.getActionMasked();
+        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN) {
+            int i = e.getActionIndex();
+            if (pauseBtn.contains(e.getX(i), e.getY(i))) {   // pause button is checked before the joystick
+                sounds.click();
+                pauseGame(false);
+                return true;
+            }
         }
         switch (e.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
@@ -241,7 +330,7 @@ public class GameView extends SurfaceView implements Runnable {
 
     private void shootAngle(float angle) {
         shots.add(new Projectile(player.x, player.y,
-                (float) Math.cos(angle), (float) Math.sin(angle), 900f, BULLET_DAMAGE));
+                (float) Math.cos(angle), (float) Math.sin(angle), 900f, Math.round(BULLET_DAMAGE * damageMult)));
     }
 
     /**
@@ -324,7 +413,7 @@ public class GameView extends SurfaceView implements Runnable {
                         remove = true;
                         if (en.hp <= 0) {
                             gems.add(new Gem(en.x, en.y, en.xpValue));
-                            if (en.boss) showBanner("BOSS DEFEATED!", 0xFFFFD54F, 3f);
+                            if (en.boss) { bossKills++; showBanner("BOSS DEFEATED!", 0xFFFFD54F, 3f); }
                             enemies.remove(j);
                         }
                         break;
@@ -356,7 +445,12 @@ public class GameView extends SurfaceView implements Runnable {
             }
         }
 
-        if (player.hp <= 0) { state = GAME_OVER; sounds.gameOver(); }
+        if (player.hp <= 0) {
+            goldEarned = (wave - 1) * GOLD_PER_WAVE + bossKills * GOLD_PER_BOSS;
+            PlayerData.addGold(getContext(), goldEarned);     // spend it on the Convene banner
+            state = GAME_OVER;
+            sounds.gameOver();
+        }
     }
 
     /** Picks a point just outside the screen, around the player (result in spawnX, spawnY). */
@@ -433,12 +527,54 @@ public class GameView extends SurfaceView implements Runnable {
 
         joystick.draw(c, shapePaint);
         drawHud(c, w, h);
+        if (state == PAUSED) drawPauseMenu(c, w, h);
         if (state == GAME_OVER) drawGameOver(c, w, h);
+    }
+
+    private void drawPauseButton(Canvas c) {
+        shapePaint.setStyle(Paint.Style.FILL);
+        shapePaint.setColor(0x99000000);
+        c.drawRoundRect(pauseBtn, 16f, 16f, shapePaint);
+        shapePaint.setColor(Color.WHITE);
+        float s = pauseBtn.width();
+        float barW = s * 0.14f, barH = s * 0.5f;
+        float cx = pauseBtn.centerX(), cy = pauseBtn.centerY();
+        c.drawRect(cx - barW * 1.5f, cy - barH / 2f, cx - barW * 0.5f, cy + barH / 2f, shapePaint);
+        c.drawRect(cx + barW * 0.5f, cy - barH / 2f, cx + barW * 1.5f, cy + barH / 2f, shapePaint);
+    }
+
+    private void drawPauseMenu(Canvas c, int w, int h) {
+        shapePaint.setStyle(Paint.Style.FILL);
+        shapePaint.setColor(0xCC000000);
+        c.drawRect(0, 0, w, h, shapePaint);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTextSize(h * 0.12f);
+        c.drawText("PAUSED", w / 2f, h * 0.26f, textPaint);
+        textPaint.setTextSize(h * 0.04f);
+        c.drawText(pauseReason, w / 2f, h * 0.34f, textPaint);
+
+        drawMenuButton(c, resumeBtn, "RESUME", h);
+        drawMenuButton(c, settingsBtn, "SETTINGS", h);
+        drawMenuButton(c, exitBtn, "EXIT", h);
+    }
+
+    private void drawMenuButton(Canvas c, RectF r, String label, int h) {
+        shapePaint.setStyle(Paint.Style.FILL);
+        shapePaint.setColor(0xEE1B1F4B);
+        c.drawRoundRect(r, 20f, 20f, shapePaint);
+        shapePaint.setStyle(Paint.Style.STROKE);
+        shapePaint.setStrokeWidth(4f);
+        shapePaint.setColor(0xFFFFD54F);
+        c.drawRoundRect(r, 20f, 20f, shapePaint);
+        shapePaint.setStyle(Paint.Style.FILL);
+        textPaint.setTextSize(h * 0.055f);
+        c.drawText(label, r.centerX(), r.centerY() + h * 0.02f, textPaint);
     }
 
     private void drawHud(Canvas c, int w, int h) {
         float m = h * 0.03f;
-        float left = w * 0.04f;
+        float left = pauseBtn.right + w * 0.015f;   // HP bar starts right of the pause button
         textPaint.setTextAlign(Paint.Align.LEFT);
         shapePaint.setStyle(Paint.Style.FILL);
 
@@ -447,6 +583,8 @@ public class GameView extends SurfaceView implements Runnable {
         c.drawRect(0, 0, w, h * 0.02f, shapePaint);
         shapePaint.setColor(0xFF4DD0FF);
         c.drawRect(0, 0, w * player.xp / (float) player.xpNeeded, h * 0.02f, shapePaint);
+
+        drawPauseButton(c);
 
         // HP bar + level + weapon
         float barW = w * 0.22f, barH = h * 0.035f, top = h * 0.05f;
@@ -509,6 +647,10 @@ public class GameView extends SurfaceView implements Runnable {
             gameOverText = String.format("Reached wave %d   |   Survived %02d:%02d", wave, sec / 60, sec % 60);
         }
         c.drawText(gameOverText, w / 2f, h * 0.55f, textPaint);
-        c.drawText("Tap to return to the menu", w / 2f, h * 0.68f, textPaint);
+        textPaint.setColor(0xFFFFD54F);
+        if (goldText == null) goldText = "Gold earned: +" + goldEarned;   // built once
+        c.drawText(goldText, w / 2f, h * 0.63f, textPaint);
+        textPaint.setColor(Color.WHITE);
+        c.drawText("Tap to return to the menu", w / 2f, h * 0.76f, textPaint);
     }
 }

@@ -2,4 +2,4 @@
 <!-- Release builds remove unused resources. The animation frames are loaded by name
      (Assets.frames), so tell the shrinker to keep them. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/rin_walk_*,@drawable/slime_walk_*,@drawable/wolf_walk_*,@drawable/skel_walk_*,@drawable/tree_walk_*,@drawable/mecha_walk_*,@drawable/malenia_walk_*" />
+    tools:keep="@drawable/rin_walk_*,@drawable/slime_walk_*,@drawable/wolf_walk_*,@drawable/skel_walk_*,@drawable/tree_walk_*,@drawable/mecha_walk_*,@drawable/malenia_walk_*,@drawable/rin_idle_*,@drawable/caster_idle_*,@drawable/gilgamesh_idle_*,@drawable/lancer_idle_*,@drawable/shionne_idle_*" />
